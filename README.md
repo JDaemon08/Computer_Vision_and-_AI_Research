@@ -1,0 +1,1 @@
+This document represents a scholarship research involving LLM and LIDAR cameras to identify shape, distance, movement and so on. It is expected to integrate with another project of a robotic arm on a later date.
