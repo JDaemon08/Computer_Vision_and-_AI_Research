@@ -5,7 +5,9 @@ from config import (
     CAMERA_HEIGHT,
     CAMERA_WIDTH,
     CAMERA_FPS,
-    SHOW_DEPTH_WINDOW
+    SHOW_DEPTH_WINDOW,
+    DEPTH_MAX_CM,
+    DEPTH_MIN_CM
 )
 
 class RealSenseCamera:
@@ -84,6 +86,9 @@ class RealSenseCamera:
         raw_depth = depth_image[y,x]
         distance_cm = raw_depth * self.depth_scale * 100
 
+        if distance_cm < DEPTH_MIN_CM or distance_cm > DEPTH_MAX_CM:
+            return 0.0
+
         return distance_cm
         
     def show_image(self, color_image, depth_image, window_name="RealSense"):
@@ -92,13 +97,15 @@ class RealSenseCamera:
                 print("There are no frames to show.")
                 return
             color_image, depth_image = self.frames
+
+        if SHOW_DEPTH_WINDOW:
+            depth_colormap = cv2.applyColorMap(
+                cv2.convertScaleAbs(depth_image, alpha=0.03),
+                cv2.COLORMAP_JET
+            )
+            cv2.imshow(f'{window_name} - Depth', depth_colormap)
         
-        depth_colormap = cv2.applyColorMap(
-            cv2.convertScaleAbs(depth_image, alpha=0.03),
-            cv2.COLORMAP_JET
-        )
         cv2.imshow(f'{window_name} - Color', color_image)
-        cv2.imshow(f'{window_name} - Depth', depth_colormap)
     pass
 
 if __name__ == "__main__":

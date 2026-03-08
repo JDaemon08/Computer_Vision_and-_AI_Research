@@ -36,5 +36,5 @@ BBOX_THICKNESS      = 2
 LABEL_COLOR         = (0, 255, 0)
 LABEL_FONT_SCALE    = 0.5
 LABEL_THICKNESS     = 1
-SHOW_DEPTH_WINDOW   = True           # toggle the depth colormap window
+SHOW_DEPTH_WINDOW   = False           # toggle the depth colormap window
 
