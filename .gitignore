@@ -173,3 +173,12 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
+# YOLO models
+*.pt
+
+# Virtual environment
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc

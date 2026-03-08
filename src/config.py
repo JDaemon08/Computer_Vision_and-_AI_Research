@@ -9,8 +9,8 @@ CAMERA_FPS      = 30
 #----------------------
 # YOLO
 #----------------------
-YOLO_MODEL_PATH     = "yolov8n.pt" # n=nano
-YOLO_CONFIDENCE     = 0.5 #minimum confidence to accept detection
+YOLO_MODEL_PATH     = "yolov8s.pt" # n=nano, s=small, m=medium, l=large - Larger models are more accurate, but heavier and more difficult to run.
+YOLO_CONFIDENCE     = 0.6 #minimum confidence to accept detection
 YOLO_IOU_THRESHOLD  = 0.45 # IoU threshold for NMS
 YOLO_INPUT_SIZE     = 640 #YOLO inference resolution
 YOLO_DEVICE         = "cpu"
