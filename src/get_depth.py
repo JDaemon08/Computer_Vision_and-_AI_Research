@@ -19,17 +19,26 @@ class RealSenseCamera:
         self.config.enable_stream(rs.stream.color, width, height, rs.format.bgr8, fps)
 
         self.align_to = rs.align(rs.stream.color)
+        self._started = False
 
         self.frames = None
 
     def start(self):
         self.pipeline = rs.pipeline()
         self.profile = self.pipeline.start(self.config) # Start the internal pipeline
+        self.depth_scale = self.profile.get_device().first_depth_sensor().get_depth_scale()
+        self._started = True
             
     def stop(self):
+        if not self._started:
+            return
         print("Stopping pipeline...")
         self.pipeline.stop()
+        self._started = False
         print("Pipeline stopped;")
+
+    def __del__(self):
+        self.stop()
     
     def get_frames(self):
         #Captures and aligns new set of frames.
@@ -39,7 +48,7 @@ class RealSenseCamera:
             depth_frame = aligned_frames.get_depth_frame()
             color_frame = aligned_frames.get_color_frame()
 
-            #verificação
+            #verification
             if not depth_frame or not color_frame:
                 print("Warning: Invalid color or depth frame.")
                 return None, None
@@ -57,6 +66,8 @@ class RealSenseCamera:
         if depth_image is None:
             if self.frames is None:
                 print("Warning: No depth frame available.")
+                return 0.0
+            
         if y < 0 or y >= depth_image.shape[0] or x < 0 or x >= depth_image.shape[1]:
             print("Coordinates outside limits.")
             return 0.0
@@ -81,8 +92,6 @@ class RealSenseCamera:
         )
         cv2.imshow(f'{window_name} - Color', color_image)
         cv2.imshow(f'{window_name} - Depth', depth_colormap)
-        def __del__(self):
-            self.stop()
     pass
 
 if __name__ == "__main__":
@@ -104,7 +113,7 @@ if __name__ == "__main__":
             center_y = color_frame.shape[0] // 2
             distance = camera.depth_at_pixel(center_x, center_y, depth_frame)
 
-            print(f'Distance at center ({center_x}, {center_y}): {distance:.0f} mm')
+            print(f'Distance at center ({center_x}, {center_y}): {distance:.0f} cm')
 
             key = cv2.waitKey(1) & 0xFF
 
