@@ -16,14 +16,23 @@ Features
 Project Structure
 IC-COMPUTER-VISIONV2/
 ├── .venv/
+
 ├── src/
+
 │   ├── config.py              # All settings in one place
+
 │   ├── get_depth.py           # RealSense D456 interface
+
 │   ├── detector.py            # YOLOv8 wrapper
+
 │   ├── point_map.py           # 3D point cloud mapper (in progress)
+
 │   ├── main.py                # Entry point
+
 │   └── test.py                # Module tests
+
 ├── .gitignore
+
 └── README.md
 
 Requirements
