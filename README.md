@@ -14,7 +14,9 @@ Features
 
 
 Project Structure
-IC-COMPUTER-VISIONV2/
+IC-COMPUTER-VISIONV2
+/
+
 ├── .venv/
 
 ├── src/
@@ -69,30 +71,31 @@ The YOLOv8 model (yolov8s.pt) will be downloaded automatically on first run (~22
 
 
 Configuration
-All parameters are centralized in src/config.py:
-ParameterDefaultDescriptionCAMERA_WIDTH1280Stream width in pixelsCAMERA_HEIGHT720Stream height in pixelsCAMERA_FPS30Frames per secondYOLO_MODEL_PATHyolov8s.ptYOLO model to useYOLO_CONFIDENCE0.6Minimum detection confidenceYOLO_IOU_THRESHOLD0.45NMS IoU thresholdYOLO_DEVICEcpucpu, cuda, or mpsDEPTH_MIN_CM20.0Minimum reliable depth (cm)DEPTH_MAX_CM1000.0Maximum reliable depth (cm)MAP_MAX_POINTS10,000Max points in the live 3D mapSHOW_DEPTH_WINDOWFalseToggle depth colormap window
+All parameters are centralized in src/config.py
 
-Usage
-Run the full pipeline
-bashpython main.py
-Run the detection test
-bashpython test.py
-Controls
-KeyActionq or ESCQuit
+Usage:
+- Run the full pipeline
+- bashpython main.py
+- Run the detection test
+- bashpython test.py
+- Controls
+- KeyActionq or ESCQuit
 
 Roadmap
 
 STATUS:
 IN PROGRESS - IN INITIAL STAGES OR NOT YET STARTED
+
 OPTIMIZE - RUNS AND WORKS, BUT PROBABLY STILL ROOM FOR OPTIMIZATION
+
 COMPLETE - COMPLETE, MOST CHANGES ARE MINOR IMPROVEMENTS, QUALITY OF LIFE OR COSMETIC
 
- RealSense D456 camera interface (COMPLETE)
- Depth measurement at pixel (OPTIMIZE)
- YOLOv8 object detection (OPTIMIZE)
- Distance per detection in overlay (OPTIMIZE)
- Live 3D point mapping with Open3D (IN PROGRESS)
- Main pipeline integration with point map (IN PROGRESS)
+ - RealSense D456 camera interface (COMPLETE)
+ - Depth measurement at pixel (OPTIMIZE)
+ - YOLOv8 object detection (OPTIMIZE)
+ - Distance per detection in overlay (OPTIMIZE)
+ - Live 3D point mapping with Open3D (IN PROGRESS)
+ - Main pipeline integration with point map (IN PROGRESS)
 
 
 License
