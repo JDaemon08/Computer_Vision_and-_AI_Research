@@ -1,22 +1,28 @@
 import pyrealsense2 as rs
 import numpy as np
 import cv2
+from config import (
+    CAMERA_HEIGHT,
+    CAMERA_WIDTH,
+    CAMERA_FPS,
+    SHOW_DEPTH_WINDOW
+)
 
 class RealSenseCamera:
     """Intel RealSense D456 Interface"""
 
-    def __init__(self, width=1280, height=720, fps=30):
+    def __init__(self):
         #initializes and configures camera
 
         print('Initiating RealSense...')
-        self.width = width
-        self.height = height
-        self.fps = fps
+        self.width      = CAMERA_WIDTH
+        self.height     = CAMERA_HEIGHT
+        self.fps        = CAMERA_FPS
 
         self.pipeline = rs.pipeline()
         self.config = rs.config()
-        self.config.enable_stream(rs.stream.depth, width, height, rs.format.z16, fps)
-        self.config.enable_stream(rs.stream.color, width, height, rs.format.bgr8, fps)
+        self.config.enable_stream(rs.stream.depth, self.width, self.height, rs.format.z16, self.fps)
+        self.config.enable_stream(rs.stream.color, self.width, self.height, rs.format.bgr8, self.fps)
 
         self.align_to = rs.align(rs.stream.color)
         self._started = False
@@ -24,10 +30,10 @@ class RealSenseCamera:
         self.frames = None
 
     def start(self):
-        self.pipeline = rs.pipeline()
-        self.profile = self.pipeline.start(self.config) # Start the internal pipeline
+        self.pipeline   = rs.pipeline()
+        self.profile    = self.pipeline.start(self.config) # Start the internal pipeline
         self.depth_scale = self.profile.get_device().first_depth_sensor().get_depth_scale()
-        self._started = True
+        self._started   = True
             
     def stop(self):
         if not self._started:
@@ -67,6 +73,7 @@ class RealSenseCamera:
             if self.frames is None:
                 print("Warning: No depth frame available.")
                 return 0.0
+            depth_image = self.frames[1]
             
         if y < 0 or y >= depth_image.shape[0] or x < 0 or x >= depth_image.shape[1]:
             print("Coordinates outside limits.")
