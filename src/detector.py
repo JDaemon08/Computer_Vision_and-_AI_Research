@@ -6,7 +6,9 @@ from config import (
     YOLO_CONFIDENCE,
     YOLO_IOU_THRESHOLD,
     YOLO_INPUT_SIZE,
-    YOLO_DEVICE
+    YOLO_DEVICE,
+    YOLO_TRACKING,
+    YOLO_TRACKER
 )
 
 @dataclass
@@ -21,6 +23,7 @@ class Detection:
     x2:         int     #bounding box: lower right
     y2:         int
     distance_cm: float = 0.0 #filled in later at main.py
+    track_id:   int    = -1
 
 class ObjectDetector:
     """Yolov8 wrapper for object detection;"""
@@ -41,14 +44,27 @@ class ObjectDetector:
         if color_frame is None:
             return []
         
-        results = self.model.predict(
-            source=color_frame,
-            conf=YOLO_CONFIDENCE,
-            iou=YOLO_IOU_THRESHOLD,
-            imgsz=YOLO_INPUT_SIZE,
-            device=self.device,
-            verbose=False #suppress per-frame console output
-        )
+        if YOLO_TRACKING:
+            results = self.model.track(
+                source=color_frame,
+                conf=YOLO_CONFIDENCE,
+                iou=YOLO_IOU_THRESHOLD,
+                imgsz=YOLO_INPUT_SIZE,
+                device=self.device,
+                tracker=YOLO_TRACKER,
+                persist=True,
+                verbose=False, #suppress per-frame console output
+            )
+        
+        else:
+            results = self.model.predict(
+                source=color_frame,
+                conf=YOLO_CONFIDENCE,
+                iou=YOLO_IOU_THRESHOLD,
+                imgsz=YOLO_INPUT_SIZE,
+                device=self.device,
+                verbose=False #suppress per-frame console output
+            )
         
         detections = []
 
@@ -60,11 +76,14 @@ class ObjectDetector:
                 confidence = float(box.conf[0])
                 label = self.model.names[int(box.cls[0])]
 
+                track_id = int(box.id[0]) if YOLO_TRACKING and box.id is not None else -1
+
                 detections.append(Detection(
                     label=label,
                     confidence=confidence,
                     cx=cx, cy=cy,
                     x1=x1, y1=y1,
-                    x2=x2, y2=y2
+                    x2=x2, y2=y2,
+                    track_id=track_id
                 ))
         return detections

@@ -39,7 +39,11 @@ def main():
                     BBOX_COLOR, BBOX_THICKNESS
                 )
 
-                label_text = f"{det.label} {det.confidence:.0%} | {det.distance_cm:.1f} cm."
+                if det.track_id != -1:
+                    label_text = f"[{det.track_id}] {det.label} {det.confidence:.0%} | {det.distance_cm:.1f} cm"
+                else:
+                    label_text = f"{det.label} {det.confidence:.0%} | {det.distance_cm:.1f} cm."
+                    
                 cv2.putText(
                     color_frame,
                     label_text,
