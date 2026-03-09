@@ -25,6 +25,8 @@ IC-COMPUTER-VISIONV2
 
 │   ├── get_depth.py           # RealSense D456 interface
 
+│   ├── get_image.py           # Test code to get infrared, RGB and Depth output from camera
+
 │   ├── detector.py            # YOLOv8 wrapper
 
 │   ├── point_map.py           # 3D point cloud mapper (in progress)
@@ -98,5 +100,5 @@ COMPLETE - COMPLETE, MOST CHANGES ARE MINOR IMPROVEMENTS, QUALITY OF LIFE OR COS
  - Main pipeline integration with point map (IN PROGRESS)
 
 
-License
+License:
 This project is for research and educational purposes.

@@ -34,7 +34,7 @@ class ObjectDetector:
     def detect(self, color_frame) -> list[Detection]:
 
         """
-        Runs YOLOv8 interference with color frame.
+        Runs YOLOv8 interference on color frame.
         Returns a list of Detection Objects.
         """
 

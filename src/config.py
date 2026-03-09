@@ -20,6 +20,7 @@ YOLO_DEVICE         = "cpu"
 #----------------------
 DEPTH_MIN_CM = 50.0
 DEPTH_MAX_CM = 1000.0
+DEPTH_PATCH_SZ = 3
 
 #----------------------
 # POINT MAPPING
