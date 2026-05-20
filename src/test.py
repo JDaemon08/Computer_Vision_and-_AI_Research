@@ -7,10 +7,10 @@ ctx = rs.context()
 devices = ctx.query_devices()
 
 if not devices:
-    raise RuntimeError("Nenhum dispositivo RealSense detectado. Verifique a conexão!")
+    raise RuntimeError("No device detected! Check connection!")
 
 for dev in devices:
-    print(f"Dispositivo detectado: {dev.get_info(rs.camera_info.name)}")
+    print(f"Device Detected: {dev.get_info(rs.camera_info.name)}")
 
 def test_detector():
     camera = RealSenseCamera()

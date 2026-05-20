@@ -1,6 +1,7 @@
 import cv2
 from get_depth import RealSenseCamera
 from detector import ObjectDetector
+from point_map import PointMapper
 from config import (
     BBOX_COLOR,
     BBOX_THICKNESS,
@@ -12,6 +13,7 @@ from config import (
 def main():
     camera   = RealSenseCamera()
     detector = ObjectDetector()
+    mapper = PointMapper()
 
     camera.start()
 
@@ -28,6 +30,7 @@ def main():
 
             for det in detections:
                 det.distance_cm = camera.depth_at_pixel(det.cx, det.cy, depth_frame)
+                mapper.update(detections)
 
                 if det.distance_cm == 0.0:
                     continue
@@ -60,6 +63,7 @@ def main():
                 break
     finally:
         camera.stop()
+        mapper.stop()
         cv2.destroyAllWindows()
         print('Program Closed.')
 
