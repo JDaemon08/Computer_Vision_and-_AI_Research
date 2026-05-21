@@ -24,6 +24,7 @@ class RealSenseCamera:
 
         self.pipeline = rs.pipeline()
         self.config = rs.config()
+        self.depth_scale = None
         self.config.enable_stream(rs.stream.depth, self.width, self.height, rs.format.z16, self.fps)
         self.config.enable_stream(rs.stream.color, self.width, self.height, rs.format.bgr8, self.fps)
 
@@ -33,9 +34,11 @@ class RealSenseCamera:
         self.frames = None
 
     def start(self):
-        self.pipeline   = rs.pipeline()
-        self.profile    = self.pipeline.start(self.config) # Start the internal pipeline
-        self._started   = True
+        self.pipeline    = rs.pipeline()
+        self.profile     = self.pipeline.start(self.config)
+        self.depth_scale = self.profile.get_device().first_depth_sensor().get_depth_scale()  # ✅ was missing
+        self._started    = True
+        print(f"Pipeline started. Depth scale: {self.depth_scale}")
             
     def stop(self):
         if not self._started:
@@ -71,36 +74,32 @@ class RealSenseCamera:
             return None, None
             
     def depth_at_pixel(self, x, y, depth_image=None):
-        """
-        Returns depth in cm at pixel (x,y).
-        Samples patch of pixels around the center and takes the median for more robust reading
-        """
-        self.patch_size = DEPTH_PATCH_SZ
+        if self.depth_scale is None:
+            return 0.0
 
         if depth_image is None:
             if self.frames is None:
                 print("Warning: No depth frame available.")
                 return 0.0
             depth_image = self.frames[1]
-        
-        half = self.patch_size // 2
-        y1   = max(0, y - half)
-        y2   = min(depth_image.shape[0], y + half)
-        x1   = max(0, x - half)
-        x2   = min(depth_image.shape[1], x + half)
-
-        patch = depth_image[y1:y2, x1:x2]
-
-        valid = patch[patch>0]
-
-        if valid.size == 0:
-            return 0.0
 
         if y < 0 or y >= depth_image.shape[0] or x < 0 or x >= depth_image.shape[1]:
             print("Coordinates outside limits.")
             return 0.0
 
-        raw_depth = np.median(valid) 
+        half  = DEPTH_PATCH_SZ // 2
+        y1    = max(0, y - half)
+        y2    = min(depth_image.shape[0], y + half)
+        x1    = max(0, x - half)
+        x2    = min(depth_image.shape[1], x + half)
+
+        patch = depth_image[y1:y2, x1:x2]
+        valid = patch[patch > 0]
+
+        if valid.size == 0:
+            return 0.0
+
+        raw_depth   = np.median(valid)
         distance_cm = raw_depth * self.depth_scale * 100
 
         if distance_cm < DEPTH_MIN_CM or distance_cm > DEPTH_MAX_CM:
