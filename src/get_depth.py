@@ -35,7 +35,6 @@ class RealSenseCamera:
     def start(self):
         self.pipeline   = rs.pipeline()
         self.profile    = self.pipeline.start(self.config) # Start the internal pipeline
-        self.depth_scale = self.profile.get_device().first_depth_sensor().get_depth_scale()
         self._started   = True
             
     def stop(self):
@@ -97,13 +96,11 @@ class RealSenseCamera:
         if valid.size == 0:
             return 0.0
 
-
         if y < 0 or y >= depth_image.shape[0] or x < 0 or x >= depth_image.shape[1]:
             print("Coordinates outside limits.")
             return 0.0
 
         raw_depth = np.median(valid) 
-        self.depth_scale = self.profile.get_device().first_depth_sensor().get_depth_scale()
         distance_cm = raw_depth * self.depth_scale * 100
 
         if distance_cm < DEPTH_MIN_CM or distance_cm > DEPTH_MAX_CM:
