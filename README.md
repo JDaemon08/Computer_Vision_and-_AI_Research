@@ -1,7 +1,7 @@
-IC Computer Vision V2
+[IC Computer Vision V2]
 Real-time object detection, distance measurement, and 3D point mapping using an Intel RealSense D456 depth camera and YOLOv8.
 
-Overview
+[Overview]
 This project captures aligned color and depth frames from the D456, runs YOLOv8 object detection on the color stream, measures the real-world distance to each detected object, and maps detections into a live 3D point cloud using Open3D.
 
 Features
@@ -39,12 +39,13 @@ IC-COMPUTER-VISIONV2
 
 └── README.md
 
-Requirements
-Hardware
+[Requirements]
+
+-Hardware-
 
 Intel RealSense D456 camera
 
-Software
+-Software-
 
 Python 3.10+
 Intel RealSense SDK 2.0
@@ -56,9 +57,9 @@ opencv-python
 ultralytics
 open3d
 
-Installation
+[Installation]
 1. Clone the repository
-bashgit clone https://github.com/your-username/ic-computer-visionV2.git
+bashgit clone https://github.com/JDaemon08/ic-computer-visionV2.git
 cd ic-computer-visionV2
 2. Create and activate a virtual environment
 bashpython -m venv .venv
@@ -72,7 +73,7 @@ python main.py
 The YOLOv8 model (yolov8s.pt) will be downloaded automatically on first run (~22MB).
 
 
-Configuration
+[Configuration]
 All parameters are centralized in src/config.py
 
 Usage:
