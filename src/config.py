@@ -27,7 +27,7 @@ YOLO_DEVICE         = "cpu"
 # TRACKING
 #----------------------
 YOLO_TRACKING = True
-YOLO_TRACKER  = "botsort.yaml" #or "bytetrack.yaml"
+YOLO_TRACKER  = "bytetrack.yaml" #or "botsort.yaml"
 
 #----------------------
 # DEPTH
@@ -42,6 +42,9 @@ DEPTH_PATCH_SZ = 3
 MAP_MAX_POINTS      = 10_000
 MAP_POINT_SIZE      = 3.0
 MAP_UPDATE_EVERY_N  = 3
+MAP_ENV_ENABLED     = True    # toggle environment map on/off
+MAP_ENV_SUBSAMPLE   = 8       # sample every Nth pixel (lower = denser, slower)
+MAP_ENV_COLOR       = [0.4, 0.8, 1.0] 
 
 #----------------------
 # VISUALIZATION (OpenCV overlay)
