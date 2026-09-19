@@ -89,7 +89,7 @@ def test_imu():
                 print(f"Gyro | x: {gyro.x:+.4f} y: {gyro.y:+.4f} z:{gyro.z:+.4f} rad/s")
             if accel_frame:
                 accel = accel_frame.as_motion_frame().get_motion_data()
-                print(f"Gyro | x: {accel.x:+.4f} y: {accel.y:+.4f} z:{accel.z:+.4f} m/s")
+                print(f"Accel | x: {accel.x:+.4f} y: {accel.y:+.4f} z:{accel.z:+.4f} m/s")
 
     finally:
         pipeline.stop()
