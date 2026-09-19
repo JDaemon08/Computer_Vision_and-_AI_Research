@@ -31,7 +31,7 @@ CLASS_COLORS = {
 DEFAULT_COLOR = [0.7, 0.7, 0.7]
 
 
-def pixel_to_3d(cx, cy, depth_cm):
+def pixel_to_3d(cx, cy, depth_cm, rotation_matrix=None):
     """
     Converts a pixel (cx, cy) and depth in cm
     to real world (X, Y, Z) coordinates in meters.
@@ -40,6 +40,12 @@ def pixel_to_3d(cx, cy, depth_cm):
     X = -((cx - CAM_PPX) * depth_m / CAM_FX)  
     Y = -((cy - CAM_PPY) * depth_m / CAM_FY)  
     Z = depth_m
+
+    if rotation_matrix is not None:
+        point = np.array([X, Y, Z])
+        point = rotation_matrix @ point
+        X, Y, Z = point
+
     return X, Y, Z
 
 
@@ -133,7 +139,7 @@ class PointMapper(_BaseMapper):
             for det in detections:
                 if det.distance_cm <= 0.0:
                     continue
-                X, Y, Z = pixel_to_3d(det.cx, det.cy, det.distance_cm)
+                X, Y, Z = pixel_to_3d(det.cx, det.cy, det.distance_cm, rotation_matrix)
                 if Z <= 0.0 or Z > 10.0:
                     continue
                 self.points.append([X, Y, Z])
@@ -147,7 +153,7 @@ class EnvironmentMapper(_BaseMapper):
         self.start_delay = start_delay
         super().__init__(window_name, start_delay=0.0)
 
-    def update(self, depth_image, detections):
+    def update(self, depth_image, detections, rotation_matrix=None):
         self.frame_count += 1
         if self.frame_count % MAP_UPDATE_EVERY_N != 0:
             return
@@ -177,6 +183,11 @@ class EnvironmentMapper(_BaseMapper):
         X = -((cols_orig - CAM_PPX) * depth_m / CAM_FX)
         Y = -((rows_orig - CAM_PPY) * depth_m / CAM_FY)
         Z = depth_m
+
+        if rotation_matrix is not None:
+            points = np.stack([X, Y, Z], axis=1)
+            points = (rotation_matrix @ points.T).T
+            X, Y, Z = points[:, 0], points[:, 1], points[:, 2]
 
         range_mask = (Z > 0.0) & (Z <= 10.0)
         X = X[range_mask]
@@ -258,7 +269,7 @@ class CombinedMapper:
                 break
             self.vis.update_renderer()
 
-    def update(self, detections, depth_image):
+    def update(self, detections, depth_image, rotation_matriz=None):
         self.frame_count += 1
         if self.frame_count % MAP_UPDATE_EVERY_N != 0:
             return
@@ -295,6 +306,11 @@ class CombinedMapper:
                     X = -((cols_orig - CAM_PPX) * depth_m / CAM_FX)
                     Y = -((rows_orig - CAM_PPY) * depth_m / CAM_FY)
                     Z = depth_m
+
+                    if rotation_matriz is not None:
+                        points = np.stack([X,Y,Z], axix=1)
+                        points = (rotation_matriz @ points.T).T
+                        X, Y, Z = points[:,0], points[:, 1], points[:, 2]
 
                     range_mask = (Z > 0.0) & (Z <= 10.0)
                     X = X[range_mask]

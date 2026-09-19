@@ -36,7 +36,6 @@ class RealSenseCamera:
 
     def attach_imu(self, imu_tracker):
         self._imu = imu_tracker
-        self._imu.register_streams(self.config)
         print("IMU_ attached")
 
     def start(self):
@@ -65,8 +64,6 @@ class RealSenseCamera:
         #Captures and aligns new set of frames.
         try:
             frameset = self.pipeline.wait_for_frames()
-            if self._imu:
-                self._imu.process_frame(frameset)
             aligned_frames = self.align_to.process(frameset)
             depth_frame = aligned_frames.get_depth_frame()
             color_frame = aligned_frames.get_color_frame()

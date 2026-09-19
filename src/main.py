@@ -28,7 +28,7 @@ def build_mapper(choice):
         return CombinedMapper(), None
     return None, None  
 
-def run_loop(camera, detector, choice):
+def run_loop(camera, detector, choice, imu=None):
     det_mapper, env_mapper = build_mapper(choice)
     combined = isinstance(det_mapper, CombinedMapper)
 
@@ -43,6 +43,8 @@ def run_loop(camera, detector, choice):
 
             if color_frame is None:
                 continue
+
+            rotation_matrix = imu.get_rotation_matrix() if imu else None
 
             try:
                 detections = detector.detect(color_frame)
@@ -76,12 +78,12 @@ def run_loop(camera, detector, choice):
             try:
                 valid_detections = [d for d in detections if d.distance_cm > 0.0]
                 if combined:
-                    det_mapper.update(valid_detections, depth_frame)
+                    det_mapper.update(valid_detections, depth_frame, rotation_matrix)
                 else:
                     if det_mapper:
-                        det_mapper.update(valid_detections)
+                        det_mapper.update(valid_detections, rotation_matrix)
                     if env_mapper:
-                        env_mapper.update(depth_frame, valid_detections)
+                        env_mapper.update(depth_frame, valid_detections, rotation_matrix)
             except Exception as e:
                 print(f"\n[Mapper Error] {e}")
 

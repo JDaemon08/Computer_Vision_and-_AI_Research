@@ -84,6 +84,10 @@ class IMUTracker:
 
     def stop(self):
         self._running = False
+        try:
+            self._pipeline.stop()
+        except Exception:
+            pass
         print("IMU tracker stopped!")
 
 
