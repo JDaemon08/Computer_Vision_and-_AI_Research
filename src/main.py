@@ -1,6 +1,7 @@
 import cv2
 from get_depth import RealSenseCamera
 from detector import ObjectDetector
+from imu import IMUTracker
 from point_map import (
     PointMapper,
     EnvironmentMapper,
@@ -111,6 +112,8 @@ def run_loop(camera, detector, choice):
 
 def main():
     camera   = RealSenseCamera()
+    imu      = IMUTracker()
+    camera.attach_imu(imu)
     detector = ObjectDetector()
     camera.start()
 
