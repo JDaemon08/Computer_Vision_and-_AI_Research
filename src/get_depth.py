@@ -160,7 +160,7 @@ if __name__ == "__main__":
                 print("Exiting...")
                 break
     
-    finally:        #Depth scale for more acurrate measuring
+    finally:  
         camera.stop()
         cv2.destroyAllWindows()
         print("Program Closed")

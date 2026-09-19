@@ -124,7 +124,7 @@ def main():
             choice = show_menu()
             if choice == "quit":
                 break
-            should_continue = run_loop(camera, detector, choice)
+            should_continue = run_loop(camera, detector, choice, imu)
             if not should_continue:
                 break
 

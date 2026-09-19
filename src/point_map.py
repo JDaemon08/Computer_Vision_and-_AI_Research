@@ -130,7 +130,7 @@ class PointMapper(_BaseMapper):
     def __init__(self, window_name="Detection Map"):
         super().__init__(window_name, start_delay=0.0)
 
-    def update(self, detections):
+    def update(self, detections, rotation_matrix=None):
         self.frame_count += 1
         if self.frame_count % MAP_UPDATE_EVERY_N != 0:
             return
@@ -269,17 +269,16 @@ class CombinedMapper:
                 break
             self.vis.update_renderer()
 
-    def update(self, detections, depth_image, rotation_matriz=None):
+    def update(self, detections, depth_image, rotation_matrix=None):
         self.frame_count += 1
         if self.frame_count % MAP_UPDATE_EVERY_N != 0:
             return
 
         with self._lock:
-            
             for det in detections:
                 if det.distance_cm <= 0.0:
                     continue
-                X, Y, Z = pixel_to_3d(det.cx, det.cy, det.distance_cm)
+                X, Y, Z = pixel_to_3d(det.cx, det.cy, det.distance_cm, rotation_matrix)
                 if Z <= 0.0 or Z > 10.0:
                     continue
                 self.det_points.append([X, Y, Z])
@@ -307,9 +306,9 @@ class CombinedMapper:
                     Y = -((rows_orig - CAM_PPY) * depth_m / CAM_FY)
                     Z = depth_m
 
-                    if rotation_matriz is not None:
-                        points = np.stack([X,Y,Z], axix=1)
-                        points = (rotation_matriz @ points.T).T
+                    if rotation_matrix is not None:
+                        points = np.stack([X,Y,Z], axis=1)
+                        points = (rotation_matrix @ points.T).T
                         X, Y, Z = points[:,0], points[:, 1], points[:, 2]
 
                     range_mask = (Z > 0.0) & (Z <= 10.0)

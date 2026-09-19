@@ -35,7 +35,7 @@ try:
 
         #display image
         cv2.imshow('RGB Feed',color_image)
-        cv2.imshow('Depth Feed',depth_image)
+        cv2.imshow('Depth Feed',depth_colormap)
         cv2.imshow('Infrared Feed', infrared_image)
 
         key = cv2.waitKey(1)
