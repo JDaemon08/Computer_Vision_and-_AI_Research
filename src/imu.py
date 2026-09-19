@@ -11,18 +11,18 @@ class IMUTracker:
     Reads gyroscope and accelerometer data od the camera and computes stable camera rotation
     """
 
-    def __init__(self, pipeline, config):
+    def __init__(self, config):
+        self._lock    = threading.Lock()
+        self._running = False
+        self._pitch   = 0.0
+        self._yaw     = 0.0
+        self._roll    = 0.0
+        self._last_ts = None
+
+    def register_streams(self, config):
         config.enable_stream(rs.stream.gyro, rs.format.motion_xyz32f, 200)
         config.enable_stream(rs.stream.accel, rs.format.motion_xyz32f, 100)
-
-        self._lock      = threading.Lock()
-        self._running   = False
-
-        self._pitch = 0.0
-        self._yaw   = 0.0
-        self._roll  = 0.0
-
-        self._last_ts = None #timestamp of last gyro frame
+    
 
     def start(self, profile):
         self._running = True
