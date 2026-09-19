@@ -32,12 +32,22 @@ class RealSenseCamera:
         self._started = False
 
         self.frames = None
+        self._imu   = None
+
+    def attach_imu(self, imu_tracker):
+        self._imu = imu_tracker
+        self._imu.register_streams(self.config)
+        print("IMU_ attached")
 
     def start(self):
         self.pipeline    = rs.pipeline()
         self.profile     = self.pipeline.start(self.config)
         self.depth_scale = self.profile.get_device().first_depth_sensor().get_depth_scale()  # ✅ was missing
         self._started    = True
+
+        if self._imu:
+            self._imu.start(self.profile)
+
         print(f"Pipeline started. Depth scale: {self.depth_scale}")
             
     def stop(self):
@@ -54,8 +64,10 @@ class RealSenseCamera:
     def get_frames(self):
         #Captures and aligns new set of frames.
         try:
-            frames = self.pipeline.wait_for_frames()
-            aligned_frames = self.align_to.process(frames)
+            frameset = self.pipeline.wait_for_frames()
+            if self._imu:
+                self._imu.process_frame(frameset)
+            aligned_frames = self.align_to.process(frameset)
             depth_frame = aligned_frames.get_depth_frame()
             color_frame = aligned_frames.get_color_frame()
 
