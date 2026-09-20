@@ -116,7 +116,7 @@ class IMUTracker:
             [np.sin(roll), np.cos(roll),  0],
             [0,           0,              1]
         ])
-        return Rz @ Ry @ Rx
+        return Rx @ Ry @ Rz
         
     def get_euler_angles(self):
         """

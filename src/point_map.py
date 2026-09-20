@@ -4,12 +4,16 @@ import threading
 from collections import deque
 from config import (
     CAM_FX, CAM_FY, CAM_PPX, CAM_PPY,
+    CAMERA_WIDTH, CAMERA_HEIGHT,
     MAP_MAX_POINTS,
     MAP_POINT_SIZE,
     MAP_UPDATE_EVERY_N,
     MAP_ENV_ENABLED,
     MAP_ENV_SUBSAMPLE,
-    MAP_ENV_COLOR
+    MAP_ENV_COLOR,
+    FRUSTRUM_DEPTH,
+    FRUSTRUM_COLOR,
+    FRUSTRUM_ORIGIN_COLOR
 )
 
 CLASS_COLORS = {
@@ -48,6 +52,91 @@ def pixel_to_3d(cx, cy, depth_cm, rotation_matrix=None):
 
     return X, Y, Z
 
+class CameraFrustrum:
+    """Renders live camera frustrum in Open3D window"""
+
+    CORNERS = [
+        (0,                        0),
+        (CAMERA_WIDTH,             0),
+        (0,            CAMERA_HEIGHT),
+        (CAMERA_WIDTH, CAMERA_HEIGHT),
+    ]
+
+    def __init__(self):
+        self.origin      = np.array([0.0, 0.0, 0.0])
+        self.line_set    = o3d.geometry.LineSet()
+        self.origin_mesh = o3d.geometry.TriangleMesh.create_sphere(radius=0.05)
+        self.origin_mesh.paint_uniform_color(FRUSTRUM_ORIGIN_COLOR) 
+        self._built       = False
+
+    def _unprojected_corner(self, px, py, rotation_matrix):
+        """Convert Pixel Corner to 3D ray direction"""
+
+        rx = -(px - CAM_PPX) / CAM_FX
+        ry = -(py - CAM_PPY) / CAM_FY
+        rz = 1.0
+
+        ray = np.array([rx, ry, rz])
+        ray = ray / np.linalg.norm(ray)
+
+        if rotation_matrix is not None:
+            ray = rotation_matrix @ ray
+
+        return ray * FRUSTRUM_DEPTH
+
+    def get_points_and_lines(self, rotation_matrix):
+        """Computes the 8 points and 8 lines of the frustrum"""
+
+        tips = [
+            self._unprojected_corner(px, py, rotation_matrix)
+            for px, py in self.CORNERS
+        ]
+
+        forward = np.array([0.0, 0.0, 1.0])
+        if rotation_matrix is not None:
+            forward = rotation_matrix @ forward
+        forward_tip = forward * FRUSTRUM_DEPTH
+
+        points = [
+            self.origin,
+            tips[0],
+            tips[1],
+            tips[2],
+            tips[3],
+            forward_tip
+        ]
+
+        lines = [
+            [0,1],
+            [0,2],
+            [0,3],
+            [0,4],
+            [1,2],
+            [3,4],
+            [1,3],
+            [2,4],
+            [0,5],
+        ]
+
+        colors = [FRUSTRUM_COLOR] * len(lines)
+
+        return points, lines, colors
+
+    def update (self, vis, rotation_matrix):
+        points, lines, colors = self.get_points_and_lines(rotation_matrix)
+
+        self.line_set.points = o3d.utility.Vector3dVector(np.array(points))
+        self.line_set.lines  = o3d.utility.Vector2iVector(np.array(lines))
+        self.line_set.colors = o3d.utility.Vector3dVector(np.array(colors))
+
+        if not self._built:
+            vis.add_geometry(self.line_set)
+            vis.add_geometry(self.origin_mesh)
+            self._built = True
+        else:
+            vis.update_geometry(self.line_set)
+            vis.update_geometry(self.origin_mesh)
+        
 
 # ─────────────────────────────────────────
 # BASE CLASS
@@ -65,9 +154,15 @@ class _BaseMapper:
         self.pcd         = o3d.geometry.PointCloud()
         self.vis         = o3d.visualization.VisualizerWithKeyCallback()
         self._start_delay = start_delay
+        self.frustrum    = CameraFrustrum()
+        self._rotation   = None
 
         self._thread = threading.Thread(target=self._run_visualizer, daemon=True)
         self._thread.start()
+
+    def set_rotation(self, rotation_matrix):
+        with self._lock:
+            self._rotation = rotation_matrix
 
     def _on_escape(self, vis):
         self._escape = True
@@ -94,6 +189,8 @@ class _BaseMapper:
 
         while not self._escape:
             with self._lock:
+                rotation = self._rotation
+
                 if len(self.points) > 0:
                     self.pcd.points = o3d.utility.Vector3dVector(np.array(self.points))
                     self.pcd.colors = o3d.utility.Vector3dVector(np.array(self.colors))
@@ -103,6 +200,8 @@ class _BaseMapper:
                     else:
                         self.vis.update_geometry(self.pcd)
 
+            self.frustrum.update(self.vis, rotation)
+            
             if not self.vis.poll_events():
                 break
             self.vis.update_renderer()
@@ -222,8 +321,15 @@ class CombinedMapper:
         self.env_pcd     = o3d.geometry.PointCloud()  
         self.vis         = o3d.visualization.VisualizerWithKeyCallback()
 
+        self.frustrum    = CameraFrustrum()
+        self._rotation   - None
+
         self._thread = threading.Thread(target=self._run_visualizer, daemon=True)
         self._thread.start()
+
+    def set_rotation(self, rotation_matrix):
+        with self._lock:
+            self._rotation = rotation_matrix
 
     def _on_escape(self, vis):
         self._escape = True
@@ -247,6 +353,7 @@ class CombinedMapper:
 
         while not self._escape:
             with self._lock:
+                rotation = self._rotation
                 if len(self.det_points) > 0:
                     self.det_pcd.points = o3d.utility.Vector3dVector(np.array(self.det_points))
                     self.det_pcd.colors = o3d.utility.Vector3dVector(np.array(self.det_colors))
@@ -264,6 +371,8 @@ class CombinedMapper:
                         env_pcd_added = True
                     else:
                         self.vis.update_geometry(self.env_pcd)
+
+            self.frustrum.update(self.vis, rotation)
 
             if not self.vis.poll_events():
                 break

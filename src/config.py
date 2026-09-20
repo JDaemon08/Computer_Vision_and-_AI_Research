@@ -31,6 +31,12 @@ YOLO_TRACKING = True
 YOLO_TRACKER  = "bytetrack.yaml" #or "botsort.yaml"
 
 #----------------------
+# CAMERA FRUSTRUM
+#----------------------
+FRUSTRUM_DEPTH = 1.0
+FRUSTRUM_COLOR = [1.0, 1.0, 1.0]
+FRUSTRUM_ORIGIN_COLOR = [1.0, 0.5, 0.0]
+#----------------------
 # DEPTH
 #----------------------
 DEPTH_MIN_CM = 50.0

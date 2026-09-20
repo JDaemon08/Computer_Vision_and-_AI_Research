@@ -95,6 +95,32 @@ def test_imu():
         pipeline.stop()
         print("\nIMU test done")
 
+def test_imu_axes():
+    """
+    Hold the camera still, then rotate it slowly around ONE axis at a time.
+    This tells us exactly which IMU axis maps to which Open3D axis.
+    """
+    from imu import IMUTracker
+    import time
+
+    imu = IMUTracker()
+    imu.start()
+
+    print("\nIMU Axis Test — hold camera still then rotate slowly")
+    print("Watch which value changes for each physical rotation\n")
+
+    try:
+        while True:
+            pitch, yaw, roll = imu.get_euler_angles()
+            print(f"Pitch (X): {pitch:+7.2f}°  |  Yaw (Y): {yaw:+7.2f}°  |  Roll (Z): {roll:+7.2f}°", end='\r')
+            time.sleep(0.05)
+
+    except KeyboardInterrupt:
+        print("\n\nAxis mapping observations:")
+        print("  When I rotate around the RED axis   (X) → which value changed?")
+        print("  When I rotate around the GREEN axis (Y) → which value changed?")
+        print("  When I rotate around the BLUE axis  (Z) → which value changed?")
+        imu.stop()
 
 #---------------------------------------------------------
 # DEPTH AT CENTER
@@ -137,8 +163,9 @@ def test_depth():
 
 if __name__ == "__main__":
     #test_detector()
-    test_imu()
+    #test_imu()
     #test_depth()
+    test_imu_axes()
 
 
 

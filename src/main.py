@@ -49,6 +49,11 @@ def run_loop(camera, detector, choice, imu=None):
 
             rotation_matrix = imu.get_rotation_matrix() if imu else None
 
+            if det_mapper:
+                det_mapper.set_rotation(rotation_matrix)
+            if env_mapper:
+                env_mapper.set_rotation(rotation_matrix)
+
             frame_count += 1
             if frame_count % YOLO_FRAME_SKIP == 0:
                 try:
