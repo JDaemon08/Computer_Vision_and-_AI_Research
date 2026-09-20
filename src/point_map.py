@@ -35,7 +35,7 @@ CLASS_COLORS = {
 DEFAULT_COLOR = [0.7, 0.7, 0.7]
 
 
-def pixel_to_3d(cx, cy, depth_cm, rotation_matrix=None):
+def pixel_to_3d(cx, cy, depth_cm, pose_matrix=None):
     """
     Converts a pixel (cx, cy) and depth in cm
     to real world (X, Y, Z) coordinates in meters.
@@ -45,9 +45,21 @@ def pixel_to_3d(cx, cy, depth_cm, rotation_matrix=None):
     Y = -((cy - CAM_PPY) * depth_m / CAM_FY)  
     Z = depth_m
 
-    if rotation_matrix is not None:
+    if pose_matrix is not None:
         point = np.array([X, Y, Z])
-        point = rotation_matrix @ point
+
+        if pose_matrix.shape == (4,4):
+            point_h = np.append(point, 1.0)
+            point_h = pose_matrix @ point_h
+            X, Y, Z = point_h[:3]
+        else:
+            point   = pose_matrix @ point
+            X, Y, Z = point_h[:3]
+
+    
+    if pose_matrix is not None:
+        point = np.array([X, Y, Z])
+        point = pose_matrix @ point
         X, Y, Z = point
 
     return X, Y, Z
@@ -69,32 +81,29 @@ class CameraFrustrum:
         self.origin_mesh.paint_uniform_color(FRUSTRUM_ORIGIN_COLOR) 
         self._built       = False
 
-    def _unprojected_corner(self, px, py, rotation_matrix):
-        """Convert Pixel Corner to 3D ray direction"""
-
+    def _unproject_corner(self, px, py, rotation_matrix):
         rx = -(px - CAM_PPX) / CAM_FX
         ry = -(py - CAM_PPY) / CAM_FY
         rz = 1.0
-
         ray = np.array([rx, ry, rz])
         ray = ray / np.linalg.norm(ray)
-
         if rotation_matrix is not None:
-            ray = rotation_matrix @ ray
-
+            R = rotation_matrix[:3, :3] if rotation_matrix.shape == (4, 4) else rotation_matrix
+            ray = R @ ray
         return ray * FRUSTRUM_DEPTH
 
     def get_points_and_lines(self, rotation_matrix):
         """Computes the 8 points and 8 lines of the frustrum"""
 
         tips = [
-            self._unprojected_corner(px, py, rotation_matrix)
+            self._unproject_corner(px, py, rotation_matrix)
             for px, py in self.CORNERS
         ]
 
         forward = np.array([0.0, 0.0, 1.0])
         if rotation_matrix is not None:
-            forward = rotation_matrix @ forward
+            R = rotation_matrix[:3, :3] if rotation_matrix.shape == (4, 4) else rotation_matrix
+            forward = R @ forward
         forward_tip = forward * FRUSTRUM_DEPTH
 
         points = [
@@ -160,9 +169,9 @@ class _BaseMapper:
         self._thread = threading.Thread(target=self._run_visualizer, daemon=True)
         self._thread.start()
 
-    def set_rotation(self, rotation_matrix):
+    def set_rotation(self, pose_matrix):
         with self._lock:
-            self._rotation = rotation_matrix
+            self._rotation = pose_matrix
 
     def _on_escape(self, vis):
         self._escape = True
@@ -285,7 +294,13 @@ class EnvironmentMapper(_BaseMapper):
 
         if rotation_matrix is not None:
             points = np.stack([X, Y, Z], axis=1)
-            points = (rotation_matrix @ points.T).T
+            if rotation_matrix.shape == (4, 4):
+                ones   = np.ones((points.shape[0], 1))
+                points_h = np.hstack([points, ones])         # (N, 4)
+                points_h = (rotation_matrix @ points_h.T).T  # (N, 4)
+                points   = points_h[:, :3]                   # drop homogeneous
+            else:
+                points = (rotation_matrix @ points.T).T
             X, Y, Z = points[:, 0], points[:, 1], points[:, 2]
 
         range_mask = (Z > 0.0) & (Z <= 10.0)
@@ -327,9 +342,9 @@ class CombinedMapper:
         self._thread = threading.Thread(target=self._run_visualizer, daemon=True)
         self._thread.start()
 
-    def set_rotation(self, rotation_matrix):
+    def set_rotation(self, pose_matrix):
         with self._lock:
-            self._rotation = rotation_matrix
+            self._rotation = pose_matrix
 
     def _on_escape(self, vis):
         self._escape = True
@@ -416,9 +431,15 @@ class CombinedMapper:
                     Z = depth_m
 
                     if rotation_matrix is not None:
-                        points = np.stack([X,Y,Z], axis=1)
-                        points = (rotation_matrix @ points.T).T
-                        X, Y, Z = points[:,0], points[:, 1], points[:, 2]
+                        points = np.stack([X, Y, Z], axis=1)
+                        if rotation_matrix.shape == (4, 4):
+                            ones   = np.ones((points.shape[0], 1))
+                            points_h = np.hstack([points, ones])         # (N, 4)
+                            points_h = (rotation_matrix @ points_h.T).T  # (N, 4)
+                            points   = points_h[:, :3]                   # drop homogeneous
+                        else:
+                            points = (rotation_matrix @ points.T).T
+                        X, Y, Z = points[:, 0], points[:, 1], points[:, 2]
 
                     range_mask = (Z > 0.0) & (Z <= 10.0)
                     X = X[range_mask]
