@@ -1,0 +1,6 @@
+pyrealsense2
+numpy
+opencv-python
+ultralytics==8.1.0
+open3d
+torch

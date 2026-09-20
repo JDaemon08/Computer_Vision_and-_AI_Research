@@ -22,6 +22,7 @@ YOLO_CONFIDENCE     = 0.45 #minimum confidence to accept detection
 YOLO_IOU_THRESHOLD  = 0.35 # IoU threshold for NMS
 YOLO_INPUT_SIZE     = 640 #YOLO inference resolution
 YOLO_DEVICE         = "cpu"
+YOLO_FRAME_SKIP     = 2 #run YOLO every N frames, iterpolate in between
 
 #----------------------
 # TRACKING

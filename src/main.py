@@ -13,7 +13,8 @@ from config import (
     BBOX_THICKNESS,
     LABEL_COLOR,
     LABEL_FONT_SCALE,
-    LABEL_THICKNESS
+    LABEL_THICKNESS,
+    YOLO_FRAME_SKIP
 )
 
 def build_mapper(choice):
@@ -30,7 +31,9 @@ def build_mapper(choice):
 
 def run_loop(camera, detector, choice, imu=None):
     det_mapper, env_mapper = build_mapper(choice)
-    combined = isinstance(det_mapper, CombinedMapper)
+    combined     = isinstance(det_mapper, CombinedMapper)
+    frame_count  = 0
+    last_detections = []
 
     try:
         while True:
@@ -39,18 +42,21 @@ def run_loop(camera, detector, choice, imu=None):
             except Exception as e:
                 print(f"\n[Camera Error] {e}")
                 print("Camera may have been disconnected. Returning to menu...")
-                return True 
+                return True
 
             if color_frame is None:
                 continue
 
             rotation_matrix = imu.get_rotation_matrix() if imu else None
 
-            try:
-                detections = detector.detect(color_frame)
-            except Exception as e:
-                print(f"\n[Detector Error] {e}")
-                continue
+            frame_count += 1
+            if frame_count % YOLO_FRAME_SKIP == 0:
+                try:
+                    last_detections = detector.detect(color_frame)
+                except Exception as e:
+                    print(f"\n[Detector Error] {e}")
+
+            detections = last_detections
 
             for det in detections:
                 try:
@@ -62,18 +68,25 @@ def run_loop(camera, detector, choice, imu=None):
                 if det.distance_cm == 0.0:
                     continue
 
-                cv2.rectangle(color_frame, (det.x1, det.y1), (det.x2, det.y2),
-                              BBOX_COLOR, BBOX_THICKNESS)
+                # Bounding box
+                cv2.rectangle(
+                    color_frame,
+                    (det.x1, det.y1), (det.x2, det.y2),
+                    BBOX_COLOR, BBOX_THICKNESS
+                )
 
+                # Label
                 if det.track_id != -1:
                     label_text = f"[{det.track_id}] {det.label} {det.confidence:.0%} | {det.distance_cm:.1f} cm"
                 else:
                     label_text = f"{det.label} {det.confidence:.0%} | {det.distance_cm:.1f} cm"
 
-                cv2.putText(color_frame, label_text,
-                            (det.x1, det.y1 - 10),
-                            cv2.FONT_HERSHEY_SIMPLEX,
-                            LABEL_FONT_SCALE, LABEL_COLOR, LABEL_THICKNESS)
+                cv2.putText(
+                    color_frame, label_text,
+                    (det.x1, det.y1 - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    LABEL_FONT_SCALE, LABEL_COLOR, LABEL_THICKNESS
+                )
 
             try:
                 valid_detections = [d for d in detections if d.distance_cm > 0.0]
@@ -97,8 +110,9 @@ def run_loop(camera, detector, choice, imu=None):
                 print("\nReturning to menu...")
                 return True
 
+            # ── q or ESC on OpenCV window → full quit ─────────
             if cv2.waitKey(1) & 0xFF in (ord('q'), 27):
-                return False 
+                return False
 
     except Exception as e:
         print(f"\n[Unexpected Error] {e}")
