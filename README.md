@@ -34,6 +34,7 @@ IC-COMPUTER-VISIONV2/
 │   ├── imu.py           # IMU tracker — gyro + accel to rotation matrix
 │   ├── point_map.py     # 3D point cloud mappers + Open3D visualizer
 │   ├── main.py          # Entry point — orchestrates all modules
+│   ├── slam.py          # Slam module
 │   └── test.py          # Module tests (detector, IMU, depth)
 ├── .gitignore
 └── README.md
